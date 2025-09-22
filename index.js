@@ -1,31 +1,43 @@
-// const express = require('express')
-// const dotenv= require("dotenv")
-import express from"express"
-import mongoose from "mongoose"
-import dotenv from "dotenv"
-import userRoute from "./route/user.route.js"
+import express from "express";
+import mongoose from "mongoose";
+import dotenv from "dotenv";
+import userRoute from "./route/user.route.js";
 import cors from "cors";
-const app = express()
-app.use(express.json())
-app.use(cors())
-dotenv.config()
-const PORT=process.env.PORT || 4000;
-const URI= process.env.MongoDBURI;
-// connect to mongoDB
-try{
-mongoose.connect(URI,{
-  useNewUrlParser:true,
-  useUnifiedTopology: true,
+import path from "path";
+import { fileURLToPath } from "url";
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+dotenv.config();
+
+const app = express();
+
+app.use(express.json());
+app.use(cors());
+
+const PORT = process.env.PORT || 4000;
+const URI = process.env.MongoDBURI;
+
+async function connectDB() {
+  try {
+    await mongoose.connect(URI);
+    console.log("Connected to MongoDB");
+  } catch (error) {
+    console.log("Error connecting to MongoDB:", error);
+  }
+}
+
+connectDB();
+
+app.use(express.static(path.join(__dirname, "public")));
+
+app.use("/user", userRoute);
+
+app.get("/*", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
 });
-console.log("connected to mongoDB")
-}
-catch(error){
-console.log("Error",error)
-}
 
-
-app.use("/user", userRoute)
 app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}`)
-})
+  console.log(`Server is running on port ${PORT}`);
+});
